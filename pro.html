@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI YouTube Finder — Shorts + Videos + Download</title>
+<style>
+  :root{
+    --bg:#0b0b0f; --card:#16161d; --line:#27272f; --txt:#f2f2f5;
+    --mut:#9a9aa6; --red:#ff2d55; --red2:#ff0033; --green:#22c55e;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--txt);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Ubuntu,sans-serif;
+    min-height:100vh;
+  }
+  header{text-align:center; padding:38px 16px 10px}
+  h1{
+    margin:0; font-size:clamp(22px,4vw,34px); letter-spacing:-.5px;
+    display:flex; gap:10px; justify-content:center; align-items:center;
+  }
+  h1 .logo{
+    display:inline-grid; place-items:center;
+    width:38px; height:27px; background:var(--red2); border-radius:7px;
+    font-size:14px; color:#fff;
+  }
+  header p{color:var(--mut); margin:10px 0 0; font-size:14px}
+
+  main{max-width:1180px; margin:0 auto; padding:18px 16px 70px}
+
+  form{
+    display:flex; gap:10px; margin:22px auto 12px; max-width:760px;
+  }
+  #q{
+    flex:1; padding:15px 18px; border-radius:14px; border:1px solid var(--line);
+    background:var(--card); color:var(--txt); font-size:16px; outline:none;
+    transition:.2s;
+  }
+  #q:focus{border-color:var(--red); box-shadow:0 0 0 4px rgba(255,45,85,.13)}
+  button.go{
+    padding:0 26px; border:0; border-radius:14px; cursor:pointer;
+    background:linear-gradient(135deg,var(--red),var(--red2));
+    color:#fff; font-size:16px; font-weight:600; transition:.2s;
+    white-space:nowrap;
+  }
+  button.go:hover{filter:brightness(1.12)}
+  button.go:disabled{opacity:.55; cursor:not-allowed}
+
+  .chips{display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-bottom:8px}
+  .chip{
+    background:var(--card); border:1px solid var(--line); color:var(--mut);
+    padding:7px 14px; border-radius:999px; font-size:13px; cursor:pointer;
+    transition:.15s;
+  }
+  .chip:hover{color:var(--txt); border-color:var(--red)}
+
+  #status{text-align:center; color:var(--mut); font-size:14px; min-height:22px; margin:18px 0}
+
+  .spinner{
+    width:15px;height:15px;border:2px solid var(--line);border-top-color:var(--red);
+    border-radius:50%; display:inline-block; vertical-align:-2px;
+    animation:spin .7s linear infinite; margin-right:8px;
+  }
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  .row-links{display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin:14px 0 26px}
+  .row-links a{
+    text-decoration:none; font-size:13px; color:var(--txt);
+    background:var(--card); border:1px solid var(--line);
+    padding:9px 16px; border-radius:10px; transition:.15s;
+  }
+  .row-links a:hover{border-color:var(--red); background:#1d1d25}
+  .row-links a.dl:hover{border-color:var(--green)}
+
+  /* global download bar */
+  .dl-bar{
+    display:flex; flex-wrap:wrap; gap:10px; justify-content:center;
+    background:linear-gradient(135deg,rgba(34,197,94,.10),rgba(34,197,94,.03));
+    border:1px solid rgba(34,197,94,.28); border-radius:16px;
+    padding:16px; margin:6px 0 4px;
+  }
+  .dl-bar .lbl{
+    width:100%; text-align:center; font-size:12.5px; color:var(--mut);
+    margin-bottom:2px; letter-spacing:.3px;
+  }
+  .dl-bar a{
+    text-decoration:none; font-size:13px; font-weight:600; color:#062b14;
+    background:linear-gradient(135deg,#34d27a,var(--green));
+    padding:10px 18px; border-radius:10px; transition:.15s;
+    display:inline-flex; align-items:center; gap:7px;
+  }
+  .dl-bar a:hover{filter:brightness(1.1); transform:translateY(-1px)}
+
+  section{margin-top:34px}
+  h2{
+    font-size:17px; margin:0 0 14px; display:flex; align-items:center; gap:10px;
+    font-weight:600;
+  }
+  h2 .tag{
+    font-size:11px; font-weight:700; letter-spacing:.6px;
+    background:var(--red2); color:#fff; padding:3px 9px; border-radius:6px;
+  }
+  h2 .tag.alt{background:#2a2a35; color:var(--mut)}
+
+  .grid-shorts{
+    display:grid; gap:16px;
+    grid-template-columns:repeat(auto-fill,minmax(196px,1fr));
+  }
+  .grid-videos{
+    display:grid; gap:18px;
+    grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+  }
+
+  .card{
+    background:var(--card); border:1px solid var(--line); border-radius:16px;
+    overflow:hidden; transition:.18s; display:flex; flex-direction:column;
+  }
+  .card:hover{border-color:#3a3a48; transform:translateY(-2px)}
+  .frame{position:relative; width:100%; background:#000}
+  .frame.short{aspect-ratio:9/16}
+  .frame.video{aspect-ratio:16/9}
+  .frame iframe{position:absolute; inset:0; width:100%; height:100%; border:0}
+
+  .meta{padding:11px 12px 13px; display:flex; flex-direction:column; flex:1}
+  .meta .title{
+    color:var(--txt); text-decoration:none; font-size:13.5px;
+    font-weight:600; line-height:1.35; margin-bottom:7px;
+    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+  }
+  .meta .title:hover{color:var(--red)}
+  .meta .sub{
+    display:flex; justify-content:space-between; gap:8px;
+    font-size:11.5px; color:var(--mut); margin-bottom:10px;
+  }
+  .meta .sub span:first-child{
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+
+  /* per-card download button */
+  .dl-row{
+    display:flex; gap:7px; margin-top:auto;
+  }
+  .dl-row a{
+    flex:1; text-align:center; text-decoration:none; font-size:12px;
+    font-weight:700; padding:9px 8px; border-radius:9px; transition:.15s;
+    display:inline-flex; align-items:center; justify-content:center; gap:5px;
+  }
+  .dl-row a.ss{
+    background:linear-gradient(135deg,#34d27a,var(--green)); color:#062b14;
+  }
+  .dl-row a.ss:hover{filter:brightness(1.12)}
+  .dl-row a.alt{
+    flex:0 0 auto; background:#1e1e27; color:var(--mut);
+    border:1px solid var(--line); padding:9px 11px;
+  }
+  .dl-row a.alt:hover{color:var(--txt); border-color:var(--green)}
+
+  .empty{
+    background:var(--card); border:1px dashed var(--line); border-radius:16px;
+    padding:26px; text-align:center; color:var(--mut); font-size:14px; line-height:1.7;
+  }
+  .empty b{color:var(--txt)}
+  .empty .row-links{margin-top:16px}
+
+  footer{
+    text-align:center; color:#5c5c68; font-size:12px; padding:0 20px 40px;
+    max-width:780px; margin:0 auto; line-height:1.7;
+  }
+  footer b{color:#7a7a88}
+</style>
+</head>
+<body>
+
+<header>
+  <h1><span class="logo">▶</span> AI YouTube Finder</h1>
+  <p>Prompt likhein — AI YouTube par search kar ke <b>5 Shorts</b> + <b>2 Videos</b> embed karega,<br>aur har video ke saath <b>SSYouTube download</b> button bhi milega.</p>
+</header>
+
+<main>
+  <form id="form" autocomplete="off">
+    <input id="q" type="text" placeholder="e.g. funny cat videos, cricket shots, cooking pasta…" />
+    <button class="go" id="btn" type="submit">Search</button>
+  </form>
+
+  <div class="chips" id="chips">
+    <span class="chip">funny cat videos</span>
+    <span class="chip">cricket best shots</span>
+    <span class="chip">easy pasta recipe</span>
+    <span class="chip">car drifting</span>
+    <span class="chip">study motivation</span>
+    <span class="chip">tech review 2025</span>
+  </div>
+
+  <div id="status"></div>
+  <div id="out"></div>
+</main>
+
+<footer>
+  <b>Note:</b> Ye tool YouTube Data API use nahi karta — public Invidious / Piped mirrors se search results leta hai.
+  Download buttons <b>ssyoutube.com</b> (third-party service) par le jate hain; wahan se MP4 / MP3 download hota hai.
+  Kisi bhi content ko download karne se pehle uske copyright / fair-use rules zaroor check karein.
+</footer>
+
+<script>
+/* ============================================================
+   AI YouTube Finder — No YouTube API  +  SSYouTube Download
+   ============================================================ */
+
+const INVIDIOUS = [
+  'https://inv.nadeko.net',
+  'https://invidious.nerdvpn.de',
+  'https://yewtu.be',
+  'https://invidious.f5.si',
+  'https://iv.melmac.space',
+  'https://invidious.privacyredirect.com',
+  'https://inv.tux.pizza'
+];
+
+const PIPED = [
+  'https://pipedapi.kavin.rocks',
+  'https://pipedapi.adminforge.de',
+  'https://api.piped.private.coffee',
+  'https://pipedapi.reallyaweso.me'
+];
+
+const $ = s => document.querySelector(s);
+const statusEl = $('#status');
+const outEl = $('#out');
+const input = $('#q');
+const btn = $('#btn');
+
+/* ---------- helpers ---------- */
+
+function esc(s){
+  return String(s ?? '').replace(/[&<>"']/g, c => (
+    {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]
+  ));
+}
+
+function fmtDur(sec){
+  sec = Number(sec) || 0;
+  if(!sec) return '--:--';
+  const h = Math.floor(sec/3600);
+  const m = Math.floor((sec%3600)/60);
+  const s = sec%60;
+  return h ? `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`
+           : `${m}:${String(s).padStart(2,'0')}`;
+}
+
+async function fetchJSON(url, ms = 8000){
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), ms);
+  try{
+    const r = await fetch(url, { signal: ctrl.signal, headers: { 'Accept':'application/json' } });
+    if(!r.ok) throw new Error('HTTP ' + r.status);
+    return await r.json();
+  } finally {
+    clearTimeout(t);
+  }
+}
+
+/* ---------- SSYouTube download links ---------- */
+
+// SSYouTube ka simple pattern: ssyoutube.com/watch?v=VIDEOID
+function ssLink(id){
+  return `https://ssyoutube.com/watch?v=${encodeURIComponent(id)}`;
+}
+// SaveFrom alternative mirror (same family, backup)
+function sfLink(id){
+  return `https://en.savefrom.net/#url=https://www.youtube.com/watch?v=${encodeURIComponent(id)}`;
+}
+
+/* ---------- normalizers ---------- */
+
+function normInvidious(items){
+  if(!Array.isArray(items)) return [];
+  return items
+    .filter(i => i && i.type === 'video' && i.videoId)
+    .map(i => ({
+      id: i.videoId,
+      title: i.title || 'Untitled',
+      author: i.author || '',
+      dur: Number(i.lengthSeconds) || 0,
+      views: i.viewCount || 0
+    }));
+}
+
+function normPiped(data){
+  const items = (data && Array.isArray(data.items)) ? data.items : [];
+  return items
+    .filter(i => i && typeof i.url === 'string' && i.url.includes('v='))
+    .map(i => {
+      const id = i.url.split('v=')[1].split('&')[0];
+      return {
+        id,
+        title: i.title || 'Untitled',
+        author: i.uploaderName || '',
+        dur: Number(i.duration) || 0,
+        views: i.views || 0
+      };
+    })
+    .filter(v => v.id);
+}
+
+/* ---------- searchers (race all mirrors, first success wins) ---------- */
+
+function invTask(base, q){
+  return (async () => {
+    const data = await fetchJSON(
+      `${base}/api/v1/search?q=${encodeURIComponent(q)}&type=video&page=1`
+    );
+    const list = normInvidious(data);
+    if(!list.length) throw new Error('empty');
+    return list;
+  })();
+}
+
+function pipedTask(base, q){
+  return (async () => {
+    const data = await fetchJSON(
+      `${base}/search?q=${encodeURIComponent(q)}&filter=videos`
+    );
+    const list = normPiped(data);
+    if(!list.length) throw new Error('empty');
+    return list;
+  })();
+}
+
+async function searchAll(q){
+  try{
+    return await Promise.any(INVIDIOUS.map(b => invTask(b, q)));
+  }catch(e){ /* sab fail */ }
+
+  try{
+    return await Promise.any(PIPED.map(b => pipedTask(b, q)));
+  }catch(e){ /* sab fail */ }
+
+  return [];
+}
+
+/* ---------- AI-ish prompt parsing ---------- */
+
+function cleanPrompt(raw){
+  let p = raw.trim().replace(/\s+/g,' ');
+  p = p.replace(/^(please|plz|mujhe|muje|mere liye|i want|show me|find|dhoondo|dhundo|dekhna hai|chahiye)\s+/i,'');
+  p = p.replace(/\s+(chahiye|de do|dikhao|dikha do|batao|search karo|dhundo)$/i,'');
+  p = p.replace(/\b(video|videos|shorts|short|clip|clips)\b/gi, m => m.toLowerCase());
+  return p.trim() || raw.trim();
+}
+
+/* ---------- render ---------- */
+
+function makeCard(v, kind){
+  const el = document.createElement('article');
+  el.className = 'card';
+  el.innerHTML = `
+    <div class="frame ${kind}">
+      <iframe
+        src="https://www.youtube.com/embed/${v.id}?rel=0&modestbranding=1"
+        title="${esc(v.title)}"
+        loading="lazy"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        referrerpolicy="strict-origin-when-cross-origin"
+        allowfullscreen></iframe>
+    </div>
+    <div class="meta">
+      <a class="title" target="_blank" rel="noopener"
+         href="https://www.youtube.com/watch?v=${v.id}">${esc(v.title)}</a>
+      <div class="sub">
+        <span>${esc(v.author || 'YouTube')}</span>
+        <span>${fmtDur(v.dur)}</span>
+      </div>
+      <div class="dl-row">
+        <a class="ss" target="_blank" rel="noopener"
+           href="${ssLink(v.id)}"
+           title="SSYouTube par download karein">
+          ⬇ Download
+        </a>
+        <a class="alt" target="_blank" rel="noopener"
+           href="${sfLink(v.id)}"
+           title="Backup downloader (SaveFrom)">
+          ⇩
+        </a>
+      </div>
+    </div>`;
+  return el;
+}
+
+function linkRow(q){
+  const s = encodeURIComponent(q + ' shorts');
+  const v = encodeURIComponent(q);
+  return `
+    <div class="row-links">
+      <a target="_blank" rel="noopener"
+         href="https://www.youtube.com/results?search_query=${s}&sp=EgIYAQ%253D%253D">
+        🔴 YouTube par Shorts kholein
+      </a>
+      <a target="_blank" rel="noopener"
+         href="https://www.youtube.com/results?search_query=${v}">
+        ▶️ YouTube par Videos kholein
+      </a>
+    </div>`;
+}
+
+function dlBar(shorts, videos){
+  const box = document.createElement('div');
+  box.className = 'dl-bar';
+  const all = [...shorts, ...videos];
+  let html = `<div class="lbl">⚡ SSYouTube Download — ek click par saare results</div>`;
+  all.slice(0, 7).forEach((v, i) => {
+    html += `<a target="_blank" rel="noopener" href="${ssLink(v.id)}">
+               ⬇ ${i < shorts.length ? 'Short' : 'Video'} ${i + 1}
+             </a>`;
+  });
+  box.innerHTML = html;
+  return box;
+}
+
+function render(q, shorts, videos){
+  outEl.innerHTML = '';
+
+  // Global download bar
+  outEl.appendChild(dlBar(shorts, videos));
+
+  // Shorts section
+  const s1 = document.createElement('section');
+  s1.innerHTML = `<h2><span class="tag">SHORTS</span> Top ${shorts.length} Shorts</h2>
+                  <div class="grid-shorts"></div>`;
+  const gs = s1.querySelector('.grid-shorts');
+  if(shorts.length){
+    shorts.forEach(v => gs.appendChild(makeCard(v, 'short')));
+  }else{
+    gs.innerHTML = `<div class="empty">Koi Short nahi mila (60 sec se kam).</div>`;
+  }
+  outEl.appendChild(s1);
+
+  // Videos section
+  const s2 = document.createElement('section');
+  s2.innerHTML = `<h2><span class="tag alt">VIDEOS</span> Top ${videos.length} Videos</h2>
+                  <div class="grid-videos"></div>`;
+  const gv = s2.querySelector('.grid-videos');
+  if(videos.length){
+    videos.forEach(v => gv.appendChild(makeCard(v, 'video')));
+  }else{
+    gv.innerHTML = `<div class="empty">Koi long video nahi mila.</div>`;
+  }
+  outEl.appendChild(s2);
+
+  // Direct links
+  const links = document.createElement('div');
+  links.innerHTML = linkRow(q);
+  outEl.appendChild(links);
+}
+
+function renderFallback(q){
+  outEl.innerHTML = `
+    <div class="empty">
+      <b>Mirrors se results nahi mile.</b><br>
+      Ye public Invidious / Piped servers kabhi kabhi down ya rate-limited ho jate hain.<br>
+      Neeche diye buttons se seedha YouTube par search khul jayega 👇
+      ${linkRow(q)}
+    </div>`;
+}
+
+/* ---------- main flow ---------- */
+
+async function run(rawPrompt){
+  const prompt = cleanPrompt(rawPrompt);
+  if(!prompt) return;
+
+  btn.disabled = true;
+  outEl.innerHTML = '';
+  statusEl.innerHTML = `<span class="spinner"></span> "${esc(prompt)}" YouTube par search ho raha hai…`;
+
+  const [a, b] = await Promise.all([
+    searchAll(prompt),
+    searchAll(prompt + ' shorts')
+  ]);
+
+  const seen = new Set();
+  const merged = [];
+  for(const v of [...a, ...b]){
+    if(!seen.has(v.id)){ seen.add(v.id); merged.push(v); }
+  }
+
+  if(!merged.length){
+    statusEl.textContent = '⚠️ Koi result nahi mila.';
+    renderFallback(prompt);
+    btn.disabled = false;
+    return;
+  }
+
+  const shortsPool = merged.filter(v => v.dur > 0 && v.dur <= 70);
+  const videoPool  = merged.filter(v => v.dur > 70);
+
+  const shorts = shortsPool.slice(0, 5);
+  const videos = videoPool.slice(0, 2);
+
+  const usedIds = new Set([...shorts, ...videos].map(v => v.id));
+  const leftover = merged.filter(v => !usedIds.has(v.id));
+
+  for(const v of leftover){
+    if(shorts.length >= 5) break;
+    if(!usedIds.has(v.id)){ shorts.push(v); usedIds.add(v.id); }
+  }
+  for(const v of leftover){
+    if(videos.length >= 2) break;
+    if(!usedIds.has(v.id)){ videos.push(v); usedIds.add(v.id); }
+  }
+
+  statusEl.innerHTML = `✅ <b>${shorts.length}</b> Shorts + <b>${videos.length}</b> Videos mil gaye — har card par ⬇ Download button hai.`;
+  render(prompt, shorts, videos);
+  btn.disabled = false;
+}
+
+/* ---------- events ---------- */
+
+$('#form').addEventListener('submit', e => {
+  e.preventDefault();
+  run(input.value);
+});
+
+$('#chips').addEventListener('click', e => {
+  if(e.target.classList.contains('chip')){
+    input.value = e.target.textContent.trim();
+    run(input.value);
+  }
+});
+</script>
+</body>
+</html>
