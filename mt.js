@@ -1,13 +1,53 @@
 /**
- * Nexura Full‑Page Credit Overlay
- * Jab user `name`, `owner`, `image` variables set kare,
- * to poori screen par ek beautiful credit page show hota hai.
+ * Nexura Full‑Page Credit Overlay (v2)
+ * ─ Mandatory URL hashtags: #nexura, #copy, #copyright, #taqi, #mt
+ * ─ User custom hashtags bhi URL mein hone zaroori hain
+ * ─ Koi bhi ek missing ho → kuch bhi show nahi hoga
  */
 
 (function () {
   'use strict';
 
-  // ── Default values ──────────────────────────────────────────────────────
+  // ══════════════════════════════════════════════════════════════════════
+  // 🔒 MANDATORY HASHTAGS — Yeh sab URL mein hona zaroori hai
+  // ══════════════════════════════════════════════════════════════════════
+  var MANDATORY_HASHTAGS = ['nexura', 'copy', 'copyright', 'taqi', 'mt'];
+
+  // ── User ke custom hashtags parse karo ─────────────────────────────────
+  var userHashtags = [];
+  if (typeof window.hashtag !== 'undefined' && window.hashtag) {
+    userHashtags = String(window.hashtag)
+      .split(',')
+      .map(function (h) { return h.trim().toLowerCase().replace(/^#/, ''); })
+      .filter(function (h) { return h.length > 0; });
+  }
+
+  // ── URL hash se hashtags nikalo (comma / slash / plus / space se split) ─
+  var rawHash = (window.location.hash || '').replace(/^#/, '').toLowerCase();
+  var urlHashtags = rawHash
+    .split(/[,/+\s]+/)
+    .map(function (h) { return h.trim(); })
+    .filter(function (h) { return h.length > 0; });
+
+  // ── Check: saare mandatory hashtags URL mein hone chahiye ──────────────
+  var mandatoryOk = MANDATORY_HASHTAGS.every(function (h) {
+    return urlHashtags.indexOf(h) !== -1;
+  });
+
+  // ── Check: user ke saare custom hashtags bhi URL mein hone chahiye ─────
+  var customOk = userHashtags.every(function (h) {
+    return urlHashtags.indexOf(h) !== -1;
+  });
+
+  // ── Agar koi bhi check fail ho → chup chaap ruk jao ────────────────────
+  if (!mandatoryOk || !customOk) {
+    return; // ⛔ Kuch bhi show nahi hoga
+  }
+
+  // ══════════════════════════════════════════════════════════════════════
+  // ✅ Sab check pass — ab overlay banao
+  // ══════════════════════════════════════════════════════════════════════
+
   var DEFAULT_NAME  = 'My Website';
   var DEFAULT_OWNER = 'Anonymous';
   var DEFAULT_IMAGE = 'https://ui-avatars.com/api/?name=User&background=random&size=256';
@@ -27,7 +67,6 @@
     var style = document.createElement('style');
     style.id = 'nexura-overlay-styles';
     style.textContent = `
-      /* ── Full Page Overlay ─────────────────────────────────────────── */
       #nexura-overlay {
         position: fixed;
         inset: 0;
@@ -41,7 +80,6 @@
         overflow: hidden;
       }
 
-      /* Floating animated blobs for beauty */
       #nexura-overlay::before,
       #nexura-overlay::after {
         content: '';
@@ -73,7 +111,6 @@
         to   { opacity: 1; }
       }
 
-      /* ── Card ──────────────────────────────────────────────────────── */
       #nexura-overlay .nexura-card {
         position: relative;
         z-index: 1;
@@ -87,7 +124,7 @@
           inset 0 1px 0 rgba(255, 255, 255, 0.1);
         padding: 48px 40px;
         text-align: center;
-        max-width: 520px;
+        max-width: 560px;
         width: 90%;
         animation: nexuraPop 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
       }
@@ -97,7 +134,6 @@
         to   { opacity: 1; transform: scale(1) translateY(0); }
       }
 
-      /* ── Close Button ──────────────────────────────────────────────── */
       #nexura-overlay .nexura-close {
         position: absolute;
         top: 18px;
@@ -121,7 +157,6 @@
         transform: rotate(90deg);
       }
 
-      /* ── Avatar ────────────────────────────────────────────────────── */
       #nexura-overlay .nexura-avatar {
         width: 120px;
         height: 120px;
@@ -133,7 +168,6 @@
         background: #1e1e2e;
       }
 
-      /* ── Text ──────────────────────────────────────────────────────── */
       #nexura-overlay .nexura-name {
         font-size: 32px;
         font-weight: 700;
@@ -164,12 +198,12 @@
         border: 1px solid rgba(16, 185, 129, 0.25);
       }
 
-      /* ── Hashtags ──────────────────────────────────────────────────── */
       #nexura-overlay .nexura-hashtags {
         display: flex;
         flex-wrap: wrap;
         justify-content: center;
         gap: 8px;
+        margin-top: 8px;
       }
 
       #nexura-overlay .nexura-hashtag {
@@ -188,7 +222,16 @@
         transform: translateY(-1px);
       }
 
-      /* ── Mobile ────────────────────────────────────────────────────── */
+      /* Mandatory badges ko alag color do */
+      #nexura-overlay .nexura-hashtag.required {
+        color: #6ee7b7;
+        background: rgba(16, 185, 129, 0.15);
+        border-color: rgba(16, 185, 129, 0.35);
+      }
+      #nexura-overlay .nexura-hashtag.required:hover {
+        background: rgba(16, 185, 129, 0.3);
+      }
+
       @media (max-width: 520px) {
         #nexura-overlay .nexura-card {
           padding: 36px 20px;
@@ -198,12 +241,8 @@
           width: 90px;
           height: 90px;
         }
-        #nexura-overlay .nexura-name {
-          font-size: 24px;
-        }
-        #nexura-overlay .nexura-owner {
-          font-size: 14px;
-        }
+        #nexura-overlay .nexura-name { font-size: 24px; }
+        #nexura-overlay .nexura-owner { font-size: 14px; }
         #nexura-overlay .nexura-copyfree {
           font-size: 13px;
           padding: 6px 16px;
@@ -225,7 +264,6 @@
     var card = document.createElement('div');
     card.className = 'nexura-card';
 
-    // Close button
     var closeBtn = document.createElement('button');
     closeBtn.className = 'nexura-close';
     closeBtn.innerHTML = '&times;';
@@ -236,49 +274,64 @@
       setTimeout(function () { overlay.remove(); }, 300);
     };
 
-    // Avatar
     var avatar = document.createElement('img');
     avatar.className = 'nexura-avatar';
     avatar.src = config.image;
     avatar.alt = config.name;
     avatar.onerror = function () { this.src = DEFAULT_IMAGE; };
 
-    // Name
     var nameEl = document.createElement('div');
     nameEl.className = 'nexura-name';
     nameEl.textContent = config.name;
 
-    // Owner
     var ownerEl = document.createElement('div');
     ownerEl.className = 'nexura-owner';
     ownerEl.textContent = 'by ' + config.owner;
 
-    // Copy free
     var copyFree = document.createElement('div');
     copyFree.className = 'nexura-copyfree';
     copyFree.textContent = '✦ This web is copy free';
 
-    // Hashtags
+    // ── Hashtags: mandatory + user custom + name/owner ────────────────────
     var hashtags = document.createElement('div');
     hashtags.className = 'nexura-hashtags';
 
-    var tags = [
-      '#nexura',
-      '#copy',
-      '#copyright',
-      '#myweb',
-      '#' + config.name.replace(/\s+/g, ''),
-      '#' + config.owner.replace(/\s+/g, '')
-    ];
+    var allTags = [];
 
-    tags.forEach(function (tag) {
+    // 1) Mandatory hashtags (required class)
+    MANDATORY_HASHTAGS.forEach(function (h) {
+      allTags.push({ text: '#' + h, required: true });
+    });
+
+    // 2) User ke custom hashtags
+    userHashtags.forEach(function (h) {
+      allTags.push({ text: '#' + h, required: false });
+    });
+
+    // 3) Name aur owner se bane hashtags
+    if (config.name) {
+      allTags.push({ text: '#' + config.name.replace(/\s+/g, ''), required: false });
+    }
+    if (config.owner) {
+      allTags.push({ text: '#' + config.owner.replace(/\s+/g, ''), required: false });
+    }
+
+    // Duplicate hatao
+    var seen = {};
+    allTags = allTags.filter(function (t) {
+      var key = t.text.toLowerCase();
+      if (seen[key]) return false;
+      seen[key] = true;
+      return true;
+    });
+
+    allTags.forEach(function (t) {
       var span = document.createElement('span');
-      span.className = 'nexura-hashtag';
-      span.textContent = tag;
+      span.className = 'nexura-hashtag' + (t.required ? ' required' : '');
+      span.textContent = t.text;
       hashtags.appendChild(span);
     });
 
-    // Assemble
     card.appendChild(closeBtn);
     card.appendChild(avatar);
     card.appendChild(nameEl);
