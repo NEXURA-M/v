@@ -7,121 +7,59 @@
   <style>
     * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
     body { background-color: #0f172a; color: #f8fafc; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-    .card { background: #1e293b; padding: 2rem; border-radius: 12px; width: 100%; max-width: 500px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); border: 1px solid #334155; }
-    h2 { margin-top: 0; color: #38bdf8; text-align: center; }
+    .card { background: #1e293b; padding: 2rem; border-radius: 12px; width: 100%; max-width: 450px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); border: 1px solid #334155; }
+    h2 { margin-top: 0; color: #38bdf8; text-align: center; font-size: 1.5rem; }
+    p.subtitle { text-align: center; color: #94a3b8; font-size: 0.85rem; margin-top: -10px; margin-bottom: 20px; }
     .input-group { margin-bottom: 1.5rem; }
-    label { display: block; margin-bottom: 0.5rem; color: #94a3b8; font-size: 0.9rem; }
-    input[type="text"] { width: 100%; padding: 0.75rem; border-radius: 6px; border: 1px solid #475569; background: #0f172a; color: #fff; font-size: 1rem; }
+    label { display: block; margin-bottom: 0.5rem; color: #cbd5e1; font-size: 0.9rem; }
+    input[type="text"] { width: 100%; padding: 0.75rem; border-radius: 6px; border: 1px solid #475569; background: #0f172a; color: #fff; font-size: 1rem; outline: none; }
+    input[type="text"]:focus { border-color: #38bdf8; }
     button { width: 100%; padding: 0.75rem; border-radius: 6px; border: none; background: #0284c7; color: white; font-weight: bold; font-size: 1rem; cursor: pointer; transition: background 0.2s; }
     button:hover { background: #0369a1; }
-    button:disabled { background: #475569; cursor: not-allowed; }
     #resultBox { margin-top: 1.5rem; padding: 1rem; border-radius: 6px; background: #0f172a; display: none; border: 1px solid #334155; }
-    .btn-download { display: inline-block; width: 100%; text-align: center; padding: 0.75rem; margin-top: 0.75rem; background: #16a34a; color: white; font-weight: bold; border-radius: 6px; text-decoration: none; }
+    .btn-download { display: inline-block; width: 100%; text-align: center; padding: 0.75rem; margin-top: 0.75rem; background: #16a34a; color: white; font-weight: bold; border-radius: 6px; text-decoration: none; box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3); }
     .btn-download:hover { background: #15803d; }
-    .status-text { text-align: center; color: #e2e8f0; font-size: 0.95rem; }
-    .loader { text-align: center; margin: 10px 0; color: #38bdf8; }
+    .btn-yt { display: inline-block; width: 100%; text-align: center; padding: 0.6rem; margin-top: 0.5rem; background: transparent; color: #38bdf8; border: 1px solid #38bdf8; font-size: 0.9rem; border-radius: 6px; text-decoration: none; }
+    .btn-yt:hover { background: rgba(56, 189, 248, 0.1); }
   </style>
 </head>
 <body>
 
 <div class="card">
   <h2>AI Video Finder</h2>
-  
-  <div class="input-group">
-    <label for="patInput">GitHub Personal Access Token (PAT):</label>
-    <input type="text" id="patInput" placeholder="ghp_xxxxxxxxxxxx">
-  </div>
+  <p class="subtitle">No API | No Token Required</p>
 
   <div class="input-group">
-    <label for="promptInput">Enter Prompt / Video Description:</label>
+    <label for="promptInput">Enter Video Prompt:</label>
     <input type="text" id="promptInput" value="banana dance" placeholder="e.g. banana dance">
   </div>
 
-  <button id="generateBtn" onclick="startGeneration()">Generate Video</button>
+  <button onclick="generateVideo()">Generate Video</button>
 
   <div id="resultBox">
-    <div id="status" class="status-text"></div>
-    <div id="videoDetails" style="display:none; margin-top: 15px;">
-      <p style="margin: 5px 0; font-weight: bold;" id="videoTitle"></p>
-      <a id="watchLink" href="#" target="_blank" style="color:#38bdf8; text-decoration:none;">Watch on YouTube ↗</a>
-      <a id="downloadLink" href="#" target="_blank" class="btn-download">Download via SSYouTube</a>
-    </div>
+    <p style="margin: 0 0 10px 0; color: #94a3b8; font-size: 0.9rem;"><strong>Prompt:</strong> <span id="promptText" style="color: #fff;"></span></p>
+    <a id="downloadBtn" href="#" target="_blank" class="btn-download">Download via SSYouTube</a>
+    <a id="watchBtn" href="#" target="_blank" class="btn-yt">Watch Search Results on YouTube ↗</a>
   </div>
 </div>
 
 <script>
-  let pollInterval = null;
-
-  async function startGeneration() {
-    const pat = document.getElementById('patInput').value.trim();
+  function generateVideo() {
     const prompt = document.getElementById('promptInput').value.trim();
-    const btn = document.getElementById('generateBtn');
-    const resultBox = document.getElementById('resultBox');
-    const status = document.getElementById('status');
-    const videoDetails = document.getElementById('videoDetails');
+    if (!prompt) return alert('Karam karke query enter karein!');
 
-    if (!pat) return alert('Karam karke apna GitHub Access Token darj karein!');
-    if (!prompt) return alert('Prompt likhna zaroori hai!');
+    // URL Safe Query Builder
+    const encodedQuery = encodeURIComponent(prompt);
+    
+    // SSYouTube Search and Download Routing Pattern
+    const ssDownloadUrl = `https://ssyoutube.com/results?search_query=${encodedQuery}`;
+    const ytWatchUrl = `https://www.youtube.com/results?search_query=${encodedQuery}`;
 
-    btn.disabled = true;
-    resultBox.style.display = 'block';
-    videoDetails.style.display = 'none';
-    status.innerHTML = '<div class="loader">GitHub Action triggered... Pipeline running (~45s)</div>';
-
-    try {
-      // Trigger GitHub Action using Repository Dispatch
-      const response = await fetch('https://api.github.com/repos/NEXURA-M/v/dispatches', {
-        method: 'POST',
-        headers: {
-          'Authorization': `token ${pat}`,
-          'Accept': 'application/vnd.github.v3+json',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          event_type: 'search_video',
-          client_payload: { prompt: prompt }
-        })
-      });
-
-      if (response.ok || response.status === 204) {
-        status.innerHTML = '<div class="loader">Searching YouTube... Result JSON check ho raha hai...</div>';
-        
-        // Poll for results.json
-        if (pollInterval) clearInterval(pollInterval);
-        pollInterval = setInterval(checkResults, 5000);
-      } else {
-        const err = await response.json();
-        status.innerText = 'Error triggering workflow: ' + (err.message || response.statusText);
-        btn.disabled = false;
-      }
-    } catch (e) {
-      status.innerText = 'Failed: ' + e.message;
-      btn.disabled = false;
-    }
-  }
-
-  async function checkResults() {
-    try {
-      const res = await fetch('results.json?cache_bust=' + new Date().getTime());
-      if (res.ok) {
-        const data = await res.json();
-        const currentPrompt = document.getElementById('promptInput').value.trim();
-
-        if (data.prompt === currentPrompt && data.status === "success") {
-          clearInterval(pollInterval);
-          document.getElementById('generateBtn').disabled = false;
-          document.getElementById('status').innerText = 'Video successfully generated/found!';
-          
-          document.getElementById('videoTitle').innerText = data.title;
-          document.getElementById('watchLink').href = data.video_url;
-          document.getElementById('downloadLink').href = data.download_url;
-          
-          document.getElementById('videoDetails').style.display = 'block';
-        }
-      }
-    } catch (e) {
-      console.log("Checking for results...");
-    }
+    // UI Updates
+    document.getElementById('promptText').innerText = prompt;
+    document.getElementById('downloadBtn').href = ssDownloadUrl;
+    document.getElementById('watchBtn').href = ytWatchUrl;
+    document.getElementById('resultBox').style.display = 'block';
   }
 </script>
 
