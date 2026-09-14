@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Shorts Generator & Downloader (Anime & 3D)</title>
+  <style>
+    * { box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; }
+    body { background-color: #0f172a; color: #f8fafc; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
+    .card { background: #1e293b; padding: 2rem; border-radius: 12px; width: 100%; max-width: 440px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); border: 1px solid #334155; }
+    h2 { margin-top: 0; color: #38bdf8; text-align: center; font-size: 1.5rem; }
+    .input-group { margin-bottom: 1rem; }
+    label { display: block; margin-bottom: 0.4rem; color: #cbd5e1; font-size: 0.85rem; }
+    input[type="text"], select { width: 100%; padding: 0.75rem; border-radius: 6px; border: 1px solid #475569; background: #0f172a; color: #fff; font-size: 0.95rem; outline: none; }
+    input[type="text"]:focus, select:focus { border-color: #38bdf8; }
+    button { width: 100%; padding: 0.75rem; border-radius: 6px; border: none; background: #0284c7; color: white; font-weight: bold; font-size: 1rem; cursor: pointer; transition: 0.2s; margin-top: 5px; }
+    button:hover { background: #0369a1; }
+    button:disabled { background: #475569; cursor: not-allowed; }
+    #resultBox { margin-top: 1.5rem; display: none; }
+    .badge-container { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; justify-content: center; flex-wrap: wrap; }
+    .shorts-badge { background: #ef4444; color: #fff; font-size: 0.7rem; font-weight: bold; padding: 4px 10px; border-radius: 20px; letter-spacing: 0.5px; }
+    .ai-badge { background: #8b5cf6; color: #fff; font-size: 0.7rem; font-weight: bold; padding: 4px 10px; border-radius: 20px; }
+    .style-badge { background: #10b981; color: #fff; font-size: 0.7rem; font-weight: bold; padding: 4px 10px; border-radius: 20px; text-transform: uppercase; }
+    .shorts-container { width: 100%; max-width: 315px; height: 500px; background: #000; border-radius: 12px; overflow: hidden; margin: 0 auto 1rem auto; border: 1px solid #334155; }
+    iframe { width: 100%; height: 100%; border: none; }
+    .title-text { font-size: 0.9rem; font-weight: 600; color: #e2e8f0; margin-bottom: 8px; text-align: center; line-height: 1.4; }
+    .download-options { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+    .btn-download-ss { display: block; width: 100%; text-align: center; padding: 0.75rem; background: #16a34a; color: white; font-weight: bold; border-radius: 6px; text-decoration: none; font-size: 0.95rem; box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3); }
+    .btn-download-ss:hover { background: #15803d; }
+    .btn-download-vidmate { display: block; width: 100%; text-align: center; padding: 0.75rem; background: #ea580c; color: white; font-weight: bold; border-radius: 6px; text-decoration: none; font-size: 0.95rem; box-shadow: 0 4px 12px rgba(234, 88, 12, 0.3); }
+    .btn-download-vidmate:hover { background: #c2410c; }
+    .status { text-align: center; color: #38bdf8; margin: 10px 0; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <h2>AI Shorts Generator</h2>
+  
+  <div class="input-group">
+    <label for="promptInput">Prompt:</label>
+    <input type="text" id="promptInput" value="cyberpunk hero" placeholder="e.g. ninja fight, cyberpunk hero">
+  </div>
+
+  <div class="input-group">
+    <label for="styleSelect">Select Visual Style:</label>
+    <select id="styleSelect">
+      <option value="anime">Anime AI Style</option>
+      <option value="3d">3D AI Render</option>
+      <option value="both" selected>Anime & 3D Mix</option>
+    </select>
+  </div>
+
+  <button id="genBtn" onclick="searchAIShorts()">Generate AI Shorts</button>
+  <div id="status" class="status"></div>
+
+  <div id="resultBox">
+    <div class="badge-container">
+      <span class="shorts-badge">⚡ YOUTUBE SHORTS</span>
+      <span class="ai-badge">✨ AI GENERATED</span>
+      <span class="style-badge" id="activeStyleBadge">ANIME / 3D</span>
+    </div>
+    <div class="title-text" id="videoTitle"></div>
+    <div class="shorts-container">
+      <iframe id="shortsPlayer" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+    </div>
+
+    <div class="download-options">
+      <a id="downloadVidmateBtn" href="#" class="btn-download-vidmate">📥 Download via VidMate (Mobile App)</a>
+      <a id="downloadSSBtn" href="#" target="_blank" class="btn-download-ss">🌐 Download via SSYouTube (Web)</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  function validateVideoCriteria(item, style) {
+    if (!item || item.type !== 'stream') return false;
+
+    // 1. Strict Duration Check: 60 seconds or shorter
+    const isUnder60s = item.duration && item.duration > 0 && item.duration <= 60;
+    if (!isUnder60s) return false;
+
+    const textToSearch = (
+      (item.title || '') + ' ' + 
+      (item.shortDescription || '') + ' ' + 
+      (item.uploader || '')
+    ).toLowerCase();
+
+    // 2. AI Keywords Validation
+    const aiKeywords = [
+      'ai', '#ai', 'ai generated', 'aigenerated', '#aivideo', '#aishorts', 
+      'midjourney', 'sora', 'runway', 'pika ai', 'luma ai', 'stable diffusion', 
+      'nijijourney', 'blender', 'unreal engine 5', 'ai animation'
+    ];
+    const hasAILabel = aiKeywords.some(keyword => textToSearch.includes(keyword));
+    if (!hasAILabel) return false;
+
+    // 3. Category Style Check (Anime / 3D)
+    if (style === 'anime') {
+      const animeKeywords = ['anime', 'nijijourney', 'manga', '2d anime', 'cel shaded'];
+      return animeKeywords.some(kw => textToSearch.includes(kw));
+    } else if (style === '3d') {
+      const cgiKeywords = ['3d', 'cgi', 'render', 'unreal engine', 'blender', '3d animation', 'pixar style'];
+      return cgiKeywords.some(kw => textToSearch.includes(kw));
+    }
+
+    return true; // If style === 'both'
+  }
+
+  async function searchAIShorts() {
+    const userPrompt = document.getElementById('promptInput').value.trim();
+    const style = document.getElementById('styleSelect').value;
+    
+    if (!userPrompt) return alert('Karam karke prompt enter karein!');
+
+    // Build specific search query based on selected style
+    let styleQuery = '';
+    if (style === 'anime') styleQuery = 'anime #animeai nijijourney';
+    else if (style === '3d') styleQuery = '3D CGI render #3dai unreal engine';
+    else styleQuery = 'anime 3D #aivideo';
+
+    const shortsQuery = `${userPrompt} ${styleQuery} AI generated #shorts`;
+
+    const status = document.getElementById('status');
+    const resultBox = document.getElementById('resultBox');
+    const btn = document.getElementById('genBtn');
+    const player = document.getElementById('shortsPlayer');
+    const downloadSSBtn = document.getElementById('downloadSSBtn');
+    const downloadVidmateBtn = document.getElementById('downloadVidmateBtn');
+    const videoTitle = document.getElementById('videoTitle');
+    const activeStyleBadge = document.getElementById('activeStyleBadge');
+
+    btn.disabled = true;
+    status.innerText = 'Searching AI Shorts (≤ 60s)... Please wait';
+    resultBox.style.display = 'none';
+
+    try {
+      const endpoints = [
+        'https://pipedapi.kavin.rocks',
+        'https://api.piped.private.coffee',
+        'https://pipedapi.mha.fi'
+      ];
+
+      let videoData = null;
+
+      for (let api of endpoints) {        try {
+          const res = await fetch(`${api}/search?q=${encodeURIComponent(shortsQuery)}&filter=all`);
+          if (res.ok) {
+            const data = await res.json();
+            if (data.items && data.items.length > 0) {
+              videoData = data.items.find(item => validateVideoCriteria(item, style));
+              if (videoData) break;
+            }
+          }
+        } catch (e) {
+          console.log(`Endpoint ${api} search failed...`);
+        }
+      }
+
+      if (videoData) {
+        const videoId = videoData.url.split('v=')[1];
+        const ytShortsUrl = `https://www.youtube.com/shorts/${videoId}`;
+
+        videoTitle.innerText = videoData.title;
+        player.src = `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1`;
+        activeStyleBadge.innerText = style === 'both' ? 'Anime / 3D' : `${style.toUpperCase()} AI`;
+
+        // SSYouTube Web Link
+        downloadSSBtn.href = `https://www.ssyoutube.com/shorts/${videoId}`;
+
+        // VidMate Mobile Deep Link
+        const encodedYtUrl = encodeURIComponent(ytShortsUrl);
+        downloadVidmateBtn.href = `vidmate://url?url=${encodedYtUrl}`;
+
+        downloadVidmateBtn.onclick = function() {
+          setTimeout(() => {
+            window.location.href = `https://www.ssyoutube.com/shorts/${videoId}`;
+          }, 1500);
+        };
+
+        status.innerText = '';
+        resultBox.style.display = 'block';
+      } else {
+        status.innerText = `Koi AI Short (≤60s) nahi mila for "${style.toUpperCase()}". Dusra prompt try karein!`;
+      }
+    } catch (err) {
+      status.innerText = 'Error loading Shorts. Try again.';
+    } finally {
+      btn.disabled = false;
+    }
+  }
+</script>
+</body>
+</html>
