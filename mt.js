@@ -1,15 +1,18 @@
 /**
- * Nexura Full‑Page Credit Overlay (v2)
- * ─ Mandatory URL hashtags: #nexura, #copy, #copyright, #taqi, #mt
- * ─ User custom hashtags bhi URL mein hone zaroori hain
- * ─ Koi bhi ek missing ho → kuch bhi show nahi hoga
+ * ══════════════════════════════════════════════════════════════════════
+ *  Nexura Full‑Page Credit Overlay  (v3 Final)
+ * ══════════════════════════════════════════════════════════════════════
+ *  • Agar URL mein KOI BHI ek matching hashtag ho → overlay show
+ *  • Matching hashtags = mandatory + user custom
+ *  • Warna kuch bhi show nahi hoga (jaise script thi hi nahi)
+ * ══════════════════════════════════════════════════════════════════════
  */
 
 (function () {
   'use strict';
 
   // ══════════════════════════════════════════════════════════════════════
-  // 🔒 MANDATORY HASHTAGS — Yeh sab URL mein hona zaroori hai
+  // 🎯 MANDATORY HASHTAGS — koi bhi ek mil jaye toh kaafi hai
   // ══════════════════════════════════════════════════════════════════════
   var MANDATORY_HASHTAGS = ['nexura', 'copy', 'copyright', 'taqi', 'mt'];
 
@@ -22,6 +25,9 @@
       .filter(function (h) { return h.length > 0; });
   }
 
+  // ── Saare recognized hashtags ek jagah ─────────────────────────────────
+  var allRecognized = MANDATORY_HASHTAGS.concat(userHashtags);
+
   // ── URL hash se hashtags nikalo (comma / slash / plus / space se split) ─
   var rawHash = (window.location.hash || '').replace(/^#/, '').toLowerCase();
   var urlHashtags = rawHash
@@ -29,23 +35,19 @@
     .map(function (h) { return h.trim(); })
     .filter(function (h) { return h.length > 0; });
 
-  // ── Check: saare mandatory hashtags URL mein hone chahiye ──────────────
-  var mandatoryOk = MANDATORY_HASHTAGS.every(function (h) {
-    return urlHashtags.indexOf(h) !== -1;
+  // ══════════════════════════════════════════════════════════════════════
+  // 🔑 MAIN CHECK: koi bhi ek match kare toh chalega
+  // ══════════════════════════════════════════════════════════════════════
+  var hasAnyMatch = urlHashtags.some(function (h) {
+    return allRecognized.indexOf(h) !== -1;
   });
 
-  // ── Check: user ke saare custom hashtags bhi URL mein hone chahiye ─────
-  var customOk = userHashtags.every(function (h) {
-    return urlHashtags.indexOf(h) !== -1;
-  });
-
-  // ── Agar koi bhi check fail ho → chup chaap ruk jao ────────────────────
-  if (!mandatoryOk || !customOk) {
-    return; // ⛔ Kuch bhi show nahi hoga
+  if (!hasAnyMatch) {
+    return; // ⛔ Koi matching hashtag nahi → kuch bhi show nahi hoga
   }
 
   // ══════════════════════════════════════════════════════════════════════
-  // ✅ Sab check pass — ab overlay banao
+  // ✅ Match mil gaya — ab overlay banao
   // ══════════════════════════════════════════════════════════════════════
 
   var DEFAULT_NAME  = 'My Website';
@@ -60,7 +62,7 @@
     };
   }
 
-  // ── CSS Inject ──────────────────────────────────────────────────────────
+  // ── CSS Inject ─────────────────────────────────────────────────────────
   function injectStyles() {
     if (document.getElementById('nexura-overlay-styles')) return;
 
@@ -222,14 +224,20 @@
         transform: translateY(-1px);
       }
 
-      /* Mandatory badges ko alag color do */
+      #nexura-overlay .nexura-hashtag.matched {
+        color: #fde047;
+        background: rgba(234, 179, 8, 0.18);
+        border-color: rgba(234, 179, 8, 0.4);
+        box-shadow: 0 0 12px rgba(234, 179, 8, 0.25);
+      }
+      #nexura-overlay .nexura-hashtag.matched:hover {
+        background: rgba(234, 179, 8, 0.32);
+      }
+
       #nexura-overlay .nexura-hashtag.required {
         color: #6ee7b7;
         background: rgba(16, 185, 129, 0.15);
         border-color: rgba(16, 185, 129, 0.35);
-      }
-      #nexura-overlay .nexura-hashtag.required:hover {
-        background: rgba(16, 185, 129, 0.3);
       }
 
       @media (max-width: 520px) {
@@ -256,7 +264,7 @@
     document.head.appendChild(style);
   }
 
-  // ── Build Overlay DOM ───────────────────────────────────────────────────
+  // ── Build Overlay DOM ──────────────────────────────────────────────────
   function createOverlay(config) {
     var overlay = document.createElement('div');
     overlay.id = 'nexura-overlay';
@@ -292,31 +300,43 @@
     copyFree.className = 'nexura-copyfree';
     copyFree.textContent = '✦ This web is copy free';
 
-    // ── Hashtags: mandatory + user custom + name/owner ────────────────────
+    // ── Hashtags display ─────────────────────────────────────────────────
     var hashtags = document.createElement('div');
     hashtags.className = 'nexura-hashtags';
 
     var allTags = [];
 
-    // 1) Mandatory hashtags (required class)
     MANDATORY_HASHTAGS.forEach(function (h) {
-      allTags.push({ text: '#' + h, required: true });
+      allTags.push({
+        text: '#' + h,
+        required: true,
+        matched: urlHashtags.indexOf(h) !== -1
+      });
     });
 
-    // 2) User ke custom hashtags
     userHashtags.forEach(function (h) {
-      allTags.push({ text: '#' + h, required: false });
+      allTags.push({
+        text: '#' + h,
+        required: false,
+        matched: urlHashtags.indexOf(h) !== -1
+      });
     });
 
-    // 3) Name aur owner se bane hashtags
     if (config.name) {
-      allTags.push({ text: '#' + config.name.replace(/\s+/g, ''), required: false });
+      allTags.push({
+        text: '#' + config.name.replace(/\s+/g, ''),
+        required: false,
+        matched: false
+      });
     }
     if (config.owner) {
-      allTags.push({ text: '#' + config.owner.replace(/\s+/g, ''), required: false });
+      allTags.push({
+        text: '#' + config.owner.replace(/\s+/g, ''),
+        required: false,
+        matched: false
+      });
     }
 
-    // Duplicate hatao
     var seen = {};
     allTags = allTags.filter(function (t) {
       var key = t.text.toLowerCase();
@@ -327,7 +347,10 @@
 
     allTags.forEach(function (t) {
       var span = document.createElement('span');
-      span.className = 'nexura-hashtag' + (t.required ? ' required' : '');
+      var cls = 'nexura-hashtag';
+      if (t.matched) cls += ' matched';
+      else if (t.required) cls += ' required';
+      span.className = cls;
       span.textContent = t.text;
       hashtags.appendChild(span);
     });
@@ -343,7 +366,7 @@
     return overlay;
   }
 
-  // ── Init ────────────────────────────────────────────────────────────────
+  // ── Init ───────────────────────────────────────────────────────────────
   function init() {
     if (document.getElementById('nexura-overlay')) return;
 
