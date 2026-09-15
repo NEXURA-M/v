@@ -1,0 +1,2294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LYRAMOON — AI Video Finder</title>
+
+<style>
+:root{
+  --bg:#09090d;
+  --card:#15151d;
+  --card2:#1c1c26;
+  --line:#292934;
+  --txt:#f5f4fa;
+  --mut:#9999a8;
+  --purple:#8b35ff;
+  --purple2:#6418d3;
+  --pink:#ff1682;
+  --green:#20e0a0;
+}
+
+*{
+  box-sizing:border-box;
+}
+
+body{
+  margin:0;
+  min-height:100vh;
+  background:
+    radial-gradient(circle at 50% -10%,rgba(139,53,255,.17),transparent 35%),
+    radial-gradient(circle at 85% 35%,rgba(255,22,130,.07),transparent 25%),
+    var(--bg);
+  color:var(--txt);
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,Ubuntu,sans-serif;
+}
+
+a{
+  color:inherit;
+}
+
+/* ================= TOP BAR ================= */
+
+.topbar{
+  position:sticky;
+  top:0;
+  z-index:50;
+  height:58px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:0 16px;
+  background:rgba(10,10,15,.88);
+  border-bottom:1px solid rgba(255,255,255,.06);
+  backdrop-filter:blur(15px);
+}
+
+.topbar-inner{
+  width:min(1180px,100%);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:9px;
+  font-size:13px;
+  color:var(--mut);
+}
+
+.topbar-inner b{
+  color:#d7a9ff;
+}
+
+.dot{
+  color:#555563;
+}
+
+.top-icon{
+  color:#c978ff;
+  font-size:17px;
+}
+
+/* ================= HEADER ================= */
+
+header{
+  text-align:center;
+  padding:48px 16px 20px;
+}
+
+.brand{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:13px;
+}
+
+/* Custom icon instead of YouTube icon */
+.logo{
+  width:55px;
+  height:55px;
+  display:grid;
+  place-items:center;
+  border-radius:17px;
+  background:linear-gradient(145deg,#9f4dff,#e20b91);
+  box-shadow:0 10px 28px rgba(160,50,255,.34);
+}
+
+.logo svg{
+  width:31px;
+  height:31px;
+}
+
+h1{
+  margin:0;
+  font-size:clamp(32px,6vw,52px);
+  line-height:1;
+  letter-spacing:2px;
+  font-weight:850;
+
+  background:
+    linear-gradient(
+      100deg,
+      #fff 20%,
+      #e6c5ff 52%,
+      #ff6ab9 100%
+    );
+
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+}
+
+.tagline{
+  margin-top:13px;
+  color:#aaa9b7;
+  font-size:14px;
+  letter-spacing:2px;
+}
+
+.creator{
+  margin-top:9px;
+  font-size:12.5px;
+  color:#767684;
+}
+
+.creator b{
+  color:#dedde5;
+  letter-spacing:.7px;
+}
+
+.ai-note{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  margin-top:18px;
+  padding:9px 18px;
+  border-radius:999px;
+
+  background:
+    linear-gradient(
+      90deg,
+      rgba(112,25,190,.25),
+      rgba(255,20,132,.12)
+    );
+
+  border:1px solid rgba(190,83,255,.38);
+  color:#d9b6ff;
+  font-size:12px;
+}
+
+.ai-note b{
+  color:#fff;
+}
+
+header p{
+  max-width:720px;
+  margin:17px auto 0;
+  color:#a5a4b1;
+  font-size:15px;
+  line-height:1.7;
+}
+
+header p b{
+  color:#fff;
+}
+
+/* ================= MAIN ================= */
+
+main{
+  max-width:1180px;
+  margin:0 auto;
+  padding:8px 16px 75px;
+}
+
+/* ================= SEARCH ================= */
+
+form{
+  display:flex;
+  gap:11px;
+  max-width:800px;
+  margin:18px auto 14px;
+}
+
+#q{
+  flex:1;
+  min-width:0;
+  height:58px;
+  padding:0 19px;
+
+  border-radius:16px;
+  border:1px solid #30303b;
+  outline:none;
+
+  color:var(--txt);
+  background:rgba(23,23,31,.94);
+
+  transition:.2s;
+}
+
+#q::placeholder{
+  color:#777785;
+}
+
+#q:focus{
+  border-color:#9346ef;
+
+  box-shadow:
+    0 0 0 4px rgba(139,53,255,.13),
+    0 12px 35px rgba(103,28,190,.18);
+}
+
+button.go{
+  height:58px;
+  padding:0 28px;
+
+  border:0;
+  border-radius:16px;
+
+  cursor:pointer;
+
+  color:#fff;
+  font-weight:750;
+
+  background:
+    linear-gradient(
+      135deg,
+      #7f25e9,
+      #ed087d
+    );
+
+  box-shadow:0 12px 28px rgba(161,28,210,.22);
+  transition:.2s;
+}
+
+button.go:hover{
+  filter:brightness(1.12);
+  transform:translateY(-1px);
+}
+
+button.go:disabled{
+  opacity:.55;
+  cursor:not-allowed;
+}
+
+/* ================= CHIPS ================= */
+
+.chips{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:8px;
+
+  margin:0 auto 10px;
+  max-width:950px;
+}
+
+.chip{
+  padding:8px 14px;
+
+  border-radius:999px;
+  border:1px solid #292934;
+
+  background:#15151d;
+  color:#9e9daa;
+
+  font-size:12.5px;
+  cursor:pointer;
+
+  transition:.16s;
+}
+
+.chip:hover{
+  color:#fff;
+  border-color:#8c3ee6;
+  background:#1c1825;
+}
+
+/* ================= STATUS ================= */
+
+#status{
+  min-height:25px;
+  margin:22px 0 12px;
+
+  text-align:center;
+
+  color:#9898a7;
+  font-size:13px;
+}
+
+.spinner{
+  width:15px;
+  height:15px;
+
+  display:inline-block;
+  vertical-align:-3px;
+
+  margin-right:8px;
+
+  border:2px solid #30303b;
+  border-top-color:#c13cff;
+  border-radius:50%;
+
+  animation:spin .7s linear infinite;
+}
+
+@keyframes spin{
+  to{
+    transform:rotate(360deg);
+  }
+}
+
+/* ================= SECTIONS ================= */
+
+section{
+  margin-top:36px;
+}
+
+.section-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+
+  gap:12px;
+  margin-bottom:15px;
+}
+
+h2{
+  display:flex;
+  align-items:center;
+  gap:9px;
+
+  margin:0;
+
+  font-size:18px;
+  font-weight:750;
+}
+
+h2 .tag{
+  padding:4px 9px;
+
+  border-radius:7px;
+
+  color:#fff;
+
+  background:
+    linear-gradient(
+      135deg,
+      #8a2be2,
+      #ef1682
+    );
+
+  font-size:10px;
+  letter-spacing:.8px;
+}
+
+h2 .tag.alt{
+  background:#282832;
+  color:#aaaab6;
+}
+
+.count{
+  color:#777785;
+  font-size:12px;
+}
+
+/* ================= GRIDS ================= */
+
+.grid-shorts{
+  display:grid;
+
+  grid-template-columns:
+    repeat(5,minmax(0,1fr));
+
+  gap:17px;
+}
+
+.grid-videos{
+  display:grid;
+
+  grid-template-columns:
+    repeat(2,minmax(0,1fr));
+
+  gap:19px;
+}
+
+/* ================= CARD ================= */
+
+.card{
+  overflow:hidden;
+
+  border-radius:16px;
+  border:1px solid #292934;
+
+  background:
+    linear-gradient(
+      180deg,
+      #16161e,
+      #121219
+    );
+
+  transition:.2s;
+}
+
+.card:hover{
+  transform:translateY(-3px);
+  border-color:#3b3b4b;
+
+  box-shadow:
+    0 15px 35px rgba(0,0,0,.22);
+}
+
+/* ================= VIDEO FRAME ================= */
+
+.frame{
+  position:relative;
+  width:100%;
+
+  background:#000;
+  overflow:hidden;
+}
+
+.frame.short{
+  aspect-ratio:9/16;
+}
+
+.frame.video{
+  aspect-ratio:16/9;
+}
+
+.frame iframe{
+  position:absolute;
+
+  inset:0;
+
+  width:100%;
+  height:100%;
+
+  border:0;
+}
+
+/* ================= META ================= */
+
+.meta{
+  padding:12px 12px 13px;
+}
+
+.title{
+  display:-webkit-box;
+
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:2;
+
+  overflow:hidden;
+
+  min-height:36px;
+
+  margin-bottom:8px;
+
+  color:#f0eff5;
+  text-decoration:none;
+
+  font-size:13.5px;
+  font-weight:700;
+
+  line-height:1.35;
+}
+
+.title:hover{
+  color:#df9fff;
+}
+
+.sub{
+  display:flex;
+  justify-content:space-between;
+
+  gap:8px;
+
+  color:#777785;
+  font-size:11px;
+}
+
+.sub span:first-child{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+/* ================= BUTTONS ================= */
+
+.dl-row{
+  display:grid;
+
+  grid-template-columns:
+    1fr 1fr;
+
+  gap:7px;
+
+  margin-top:11px;
+}
+
+.dl-btn,
+.share-btn{
+  min-width:0;
+  min-height:41px;
+
+  display:inline-flex;
+
+  align-items:center;
+  justify-content:center;
+
+  gap:6px;
+
+  padding:8px 7px;
+
+  border-radius:10px;
+  border:1px solid transparent;
+
+  color:#fff;
+
+  font-size:11px;
+  font-weight:750;
+
+  text-decoration:none;
+
+  cursor:pointer;
+
+  transition:.16s;
+}
+
+.dl-btn:hover,
+.share-btn:hover{
+  transform:translateY(-1px);
+  filter:brightness(1.12);
+}
+
+/* SSYouTube */
+
+.dl-btn.ss{
+  background:
+    linear-gradient(
+      135deg,
+      #ff2d55,
+      #ff0060
+    );
+}
+
+/* VidMate */
+
+.dl-btn.vm{
+  background:
+    linear-gradient(
+      135deg,
+      #8a2be2,
+      #4b0f8a
+    );
+}
+
+/* ================= SHARE BUTTON ================= */
+
+.share-btn{
+  grid-column:1 / -1;
+
+  background:#20202a;
+
+  border-color:#343440;
+
+  color:#dedde6;
+}
+
+.share-btn:hover{
+  border-color:#9346ef;
+  color:#fff;
+  background:#28212f;
+}
+
+.share-btn.copied{
+  background:
+    linear-gradient(
+      135deg,
+      #168d71,
+      #20c997
+    );
+
+  border-color:transparent;
+}
+
+/* ================= EMPTY ================= */
+
+.empty{
+  grid-column:1 / -1;
+
+  padding:30px 20px;
+
+  text-align:center;
+
+  border:1px dashed #30303b;
+  border-radius:16px;
+
+  color:#858592;
+
+  line-height:1.7;
+
+  background:#13131a;
+}
+
+.empty b{
+  color:#eee;
+}
+
+/* ================= DIRECT LINKS ================= */
+
+.row-links{
+  display:flex;
+
+  flex-wrap:wrap;
+
+  justify-content:center;
+
+  gap:10px;
+
+  margin:25px 0 0;
+}
+
+.row-links a{
+  padding:10px 16px;
+
+  border-radius:11px;
+  border:1px solid #292934;
+
+  background:#15151d;
+
+  color:#d8d7df;
+
+  text-decoration:none;
+
+  font-size:12px;
+
+  transition:.15s;
+}
+
+.row-links a:hover{
+  border-color:#8b35ff;
+  background:#1b1822;
+}
+
+/* ================= FOOTER ================= */
+
+footer{
+  max-width:780px;
+
+  margin:0 auto;
+
+  padding:5px 20px 45px;
+
+  text-align:center;
+
+  color:#5f5f6d;
+
+  font-size:11.5px;
+
+  line-height:1.8;
+}
+
+.foot-brand{
+  color:#e9e8ee;
+
+  font-size:14px;
+  font-weight:850;
+
+  letter-spacing:3px;
+}
+
+.foot-brand span{
+  color:#ef1682;
+}
+
+.foot-creator{
+  margin:4px 0 12px;
+
+  color:#777785;
+}
+
+.foot-creator b{
+  color:#d5d4dc;
+}
+
+/* ================= RESPONSIVE ================= */
+
+@media(max-width:950px){
+
+  .grid-shorts{
+    grid-template-columns:
+      repeat(3,minmax(0,1fr));
+  }
+
+}
+
+@media(max-width:650px){
+
+  header{
+    padding-top:32px;
+  }
+
+  .topbar{
+    height:50px;
+  }
+
+  .topbar-inner{
+    font-size:11px;
+  }
+
+  form{
+    flex-direction:column;
+  }
+
+  #q,
+  button.go{
+    width:100%;
+    height:53px;
+  }
+
+  .grid-shorts{
+    grid-template-columns:
+      repeat(2,minmax(0,1fr));
+
+    gap:12px;
+  }
+
+  .grid-videos{
+    grid-template-columns:1fr;
+  }
+
+  .logo{
+    width:48px;
+    height:48px;
+    border-radius:14px;
+  }
+
+  h1{
+    font-size:35px;
+  }
+
+  .tagline{
+    font-size:11px;
+    letter-spacing:1.5px;
+  }
+
+}
+
+@media(max-width:390px){
+
+  .grid-shorts{
+    grid-template-columns:1fr;
+  }
+
+}
+</style>
+</head>
+
+<body>
+
+<!-- ================= TOP BAR ================= -->
+
+<div class="topbar">
+
+  <div class="topbar-inner">
+
+    <span class="top-icon">✦</span>
+
+    <b>LyraMoon AI Studio</b>
+
+    <span class="dot">•</span>
+
+    <span>Created by Muhammad Taqi</span>
+
+    <span class="dot">•</span>
+
+    <span>720p HD Gallery</span>
+
+  </div>
+
+</div>
+
+
+<!-- ================= HEADER ================= -->
+
+<header>
+
+  <div class="brand">
+
+    <!-- CUSTOM LYRAMOON ICON -->
+    <!-- YouTube icon removed -->
+
+    <span class="logo">
+
+      <svg
+        viewBox="0 0 32 32"
+        fill="none"
+        aria-hidden="true"
+      >
+
+        <!-- Moon -->
+        <path
+          d="M20.8 4.8a10.8 10.8 0 1 0 6.4 20A11.5 11.5 0 0 1 20.8 4.8Z"
+          fill="white"
+        />
+
+        <!-- Magic wand -->
+        <path
+          d="M8.1 22.6 18.7 12"
+          stroke="#9B3DFF"
+          stroke-width="2.7"
+          stroke-linecap="round"
+        />
+
+        <!-- Sparkles -->
+        <path
+          d="M14.2 11.3 17 8.5M18.7 16.2l2.9-2.9M10.5 20.2l-2.3.2.2-2.3M21.9 9.1l.2-2.2 2.2-.2-.2 2.2-2.2.2Z"
+          stroke="white"
+          stroke-width="1.7"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+
+      </svg>
+
+    </span>
+
+    <h1>LYRAMOON</h1>
+
+  </div>
+
+
+  <div class="tagline">
+    AI YouTube Finder
+  </div>
+
+
+  <div class="creator">
+    Created by <b>MUHAMMAD TAQI</b>
+  </div>
+
+
+  <div class="ai-note">
+
+    🤖 <b>AI GENERATED</b> — LYRAMOON
+
+  </div>
+
+
+  <p>
+    Prompt likhein — AI aapke liye
+    <b>5 Shorts</b> aur
+    <b>2 Videos</b>
+    generate karke yahan dikha dega.
+  </p>
+
+</header>
+
+
+<!-- ================= MAIN ================= -->
+
+<main>
+
+  <form
+    id="form"
+    autocomplete="off"
+  >
+
+    <input
+      id="q"
+      type="text"
+      placeholder="Enter any prompt e.g. funny cat videos, cricket shots…"
+    >
+
+    <button
+      class="go"
+      id="btn"
+      type="submit"
+    >
+      ✨ Generate Videos
+    </button>
+
+  </form>
+
+
+  <!-- SEARCH CHIPS -->
+
+  <div
+    class="chips"
+    id="chips"
+  >
+
+    <span class="chip">
+      Funny cat videos
+    </span>
+
+    <span class="chip">
+      Cricket best shots
+    </span>
+
+    <span class="chip">
+      Easy pasta recipe
+    </span>
+
+    <span class="chip">
+      Car drifting
+    </span>
+
+    <span class="chip">
+      Study motivation
+    </span>
+
+    <span class="chip">
+      Tech review 2025
+    </span>
+
+  </div>
+
+
+  <div id="status"></div>
+
+  <div id="out"></div>
+
+</main>
+
+
+<!-- ================= FOOTER ================= -->
+
+<footer>
+
+  <div class="foot-brand">
+    LYRA<span>MOON</span>
+  </div>
+
+  <div class="foot-creator">
+    Created by <b>MUHAMMAD TAQI</b>
+  </div>
+
+  <p>
+    Ye tool YouTube Data API use nahi karta.
+    Ye public Invidious / Piped mirrors se results leta hai.
+    Agar mirrors down hon to direct YouTube search buttons available rahenge.
+  </p>
+
+</footer>
+
+
+<script>
+
+/* ============================================================
+   LYRAMOON — AI YouTube Finder
+============================================================ */
+
+
+/* ================= MIRRORS ================= */
+
+const INVIDIOUS = [
+
+  'https://inv.nadeko.net',
+
+  'https://invidious.nerdvpn.de',
+
+  'https://yewtu.be',
+
+  'https://invidious.f5.si',
+
+  'https://iv.melmac.space',
+
+  'https://invidious.privacyredirect.com',
+
+  'https://inv.tux.pizza'
+
+];
+
+
+const PIPED = [
+
+  'https://pipedapi.kavin.rocks',
+
+  'https://pipedapi.adminforge.de',
+
+  'https://api.piped.private.coffee',
+
+  'https://pipedapi.reallyaweso.me'
+
+];
+
+
+/* ================= ELEMENTS ================= */
+
+const $ = s => document.querySelector(s);
+
+const statusEl = $('#status');
+
+const outEl = $('#out');
+
+const input = $('#q');
+
+const btn = $('#btn');
+
+
+/* ================= ESCAPE HTML ================= */
+
+function esc(s){
+
+  return String(s ?? '').replace(
+    /[&<>"']/g,
+    c => ({
+      '&':'&amp;',
+      '<':'&lt;',
+      '>':'&gt;',
+      '"':'&quot;',
+      "'":'&#39;'
+    }[c])
+  );
+
+}
+
+
+/* ================= FORMAT DURATION ================= */
+
+function fmtDur(sec){
+
+  sec = Number(sec) || 0;
+
+  if(!sec){
+    return '--:--';
+  }
+
+  const h = Math.floor(sec / 3600);
+
+  const m = Math.floor((sec % 3600) / 60);
+
+  const s = sec % 60;
+
+  return h
+
+    ? `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`
+
+    : `${m}:${String(s).padStart(2,'0')}`;
+
+}
+
+
+/* ================= FETCH JSON ================= */
+
+async function fetchJSON(
+  url,
+  ms = 8000
+){
+
+  const ctrl =
+    new AbortController();
+
+  const t =
+    setTimeout(
+      () => ctrl.abort(),
+      ms
+    );
+
+  try{
+
+    const r =
+      await fetch(
+        url,
+        {
+          signal:ctrl.signal,
+
+          headers:{
+            'Accept':
+              'application/json'
+          }
+        }
+      );
+
+    if(!r.ok){
+
+      throw new Error(
+        'HTTP ' + r.status
+      );
+
+    }
+
+    return await r.json();
+
+  }finally{
+
+    clearTimeout(t);
+
+  }
+
+}
+
+
+/* ================= INVIDIOUS NORMALIZER ================= */
+
+function normInvidious(items){
+
+  if(!Array.isArray(items)){
+    return [];
+  }
+
+  return items
+
+    .filter(
+      i =>
+        i &&
+        i.type === 'video' &&
+        i.videoId
+    )
+
+    .map(i => ({
+
+      id:i.videoId,
+
+      title:
+        i.title ||
+        'Untitled',
+
+      author:
+        i.author ||
+        '',
+
+      dur:
+        Number(i.lengthSeconds) ||
+        0,
+
+      views:
+        i.viewCount ||
+        0
+
+    }));
+
+}
+
+
+/* ================= PIPED NORMALIZER ================= */
+
+function normPiped(data){
+
+  const items =
+    data &&
+    Array.isArray(data.items)
+      ? data.items
+      : [];
+
+  return items
+
+    .filter(
+      i =>
+        i &&
+        typeof i.url === 'string' &&
+        i.url.includes('v=')
+    )
+
+    .map(i => {
+
+      const id =
+        i.url
+          .split('v=')[1]
+          .split('&')[0];
+
+      return {
+
+        id,
+
+        title:
+          i.title ||
+          'Untitled',
+
+        author:
+          i.uploaderName ||
+          '',
+
+        dur:
+          Number(i.duration) ||
+          0,
+
+        views:
+          i.views ||
+          0
+
+      };
+
+    })
+
+    .filter(v => v.id);
+
+}
+
+
+/* ================= INVIDIOUS TASK ================= */
+
+function invTask(base,q){
+
+  return (async() => {
+
+    const data =
+      await fetchJSON(
+        `${base}/api/v1/search?q=${encodeURIComponent(q)}&type=video&page=1`
+      );
+
+    const list =
+      normInvidious(data);
+
+    if(!list.length){
+      throw new Error('empty');
+    }
+
+    return list;
+
+  })();
+
+}
+
+
+/* ================= PIPED TASK ================= */
+
+function pipedTask(base,q){
+
+  return (async() => {
+
+    const data =
+      await fetchJSON(
+        `${base}/search?q=${encodeURIComponent(q)}&filter=videos`
+      );
+
+    const list =
+      normPiped(data);
+
+    if(!list.length){
+      throw new Error('empty');
+    }
+
+    return list;
+
+  })();
+
+}
+
+
+/* ================= SEARCH ALL ================= */
+
+async function searchAll(q){
+
+  /* Try Invidious */
+
+  try{
+
+    return await Promise.any(
+      INVIDIOUS.map(
+        base =>
+          invTask(base,q)
+      )
+    );
+
+  }catch(e){}
+
+
+  /* Try Piped */
+
+  try{
+
+    return await Promise.any(
+      PIPED.map(
+        base =>
+          pipedTask(base,q)
+      )
+    );
+
+  }catch(e){}
+
+
+  return [];
+
+}
+
+
+/* ================= CLEAN PROMPT ================= */
+
+function cleanPrompt(raw){
+
+  let p =
+    raw
+      .trim()
+      .replace(/\s+/g,' ');
+
+  p =
+    p.replace(
+      /^(please|plz|mujhe|muje|mere liye|i want|show me|find|dhoondo|dhundo|dekhna hai|chahiye)\s+/i,
+      ''
+    );
+
+  p =
+    p.replace(
+      /\s+(chahiye|de do|dikhao|dikha do|batao|search karo|dhundo)$/i,
+      ''
+    );
+
+  return p.trim() || raw.trim();
+
+}
+
+
+/* ============================================================
+   VIDEO LINKS
+============================================================ */
+
+/* Selected video ka ORIGINAL YouTube URL */
+
+function youtubeLink(id){
+
+  return (
+    'https://www.youtube.com/watch?v=' +
+    encodeURIComponent(id)
+  );
+
+}
+
+
+/* ================= SSYOUTUBE ================= */
+
+function ssLink(id){
+
+  return (
+    'https://ssyoutube.com/watch?v=' +
+    encodeURIComponent(id)
+  );
+
+}
+
+
+/* ================= VIDMATE ================= */
+
+function openVidmate(id){
+
+  const yt =
+    youtubeLink(id);
+
+  const ua =
+    navigator.userAgent || '';
+
+  const isAndroid =
+    /Android/i.test(ua);
+
+
+  if(isAndroid){
+
+    const fallback =
+      encodeURIComponent(
+        'https://vidmate.app/?url=' +
+        encodeURIComponent(yt)
+      );
+
+
+    window.location.href =
+
+      'intent://www.youtube.com/watch?v=' +
+      id +
+
+      '#Intent;scheme=https;' +
+
+      'package=com.tube.mate.vidmate;' +
+
+      'S.browser_fallback_url=' +
+
+      fallback +
+
+      ';end';
+
+  }else{
+
+    window.open(
+
+      'https://vidmate.app/?url=' +
+      encodeURIComponent(yt),
+
+      '_blank',
+
+      'noopener'
+
+    );
+
+  }
+
+}
+
+
+/* ============================================================
+   IMPORTANT:
+   SHARE SELECTED VIDEO ONLY
+============================================================ */
+
+async function shareVideo(
+  id,
+  title,
+  button
+){
+
+  /*
+    VERY IMPORTANT:
+
+    We create the URL from THIS video's ID.
+
+    We DO NOT use:
+
+      window.location.href
+
+    because that would share the LyraMoon website.
+
+    Instead:
+
+      https://www.youtube.com/watch?v=VIDEO_ID
+
+    is always shared.
+  */
+
+  const videoUrl =
+    youtubeLink(id);
+
+
+  /* Native phone share */
+
+  try{
+
+    if(navigator.share){
+
+      await navigator.share({
+
+        title:
+          title ||
+          'YouTube Video',
+
+        text:
+          title ||
+          'Watch this video',
+
+        url:
+          videoUrl
+
+      });
+
+      return;
+
+    }
+
+
+    /* Clipboard */
+
+    if(
+      navigator.clipboard &&
+      window.isSecureContext
+    ){
+
+      await navigator.clipboard.writeText(
+        videoUrl
+      );
+
+    }else{
+
+      /* Old browser fallback */
+
+      const textarea =
+        document.createElement(
+          'textarea'
+        );
+
+      textarea.value =
+        videoUrl;
+
+      textarea.style.position =
+        'fixed';
+
+      textarea.style.opacity =
+        '0';
+
+      document.body.appendChild(
+        textarea
+      );
+
+      textarea.focus();
+
+      textarea.select();
+
+      document.execCommand(
+        'copy'
+      );
+
+      textarea.remove();
+
+    }
+
+
+    /* Button feedback */
+
+    const oldText =
+      button.innerHTML;
+
+    button.classList.add(
+      'copied'
+    );
+
+    button.innerHTML =
+      '✓ Video link copied';
+
+
+    setTimeout(() => {
+
+      button.classList.remove(
+        'copied'
+      );
+
+      button.innerHTML =
+        oldText;
+
+    },1800);
+
+
+  }catch(err){
+
+    /*
+      User ne native share sheet cancel ki
+      to kuch nahi karna.
+    */
+
+    if(
+      err &&
+      err.name === 'AbortError'
+    ){
+
+      return;
+
+    }
+
+    console.error(
+      'Share failed:',
+      err
+    );
+
+  }
+
+}
+
+
+/* ================= DOWNLOAD BUTTON ================= */
+
+function ssButton(id){
+
+  return `
+
+    <a
+      class="dl-btn ss"
+      target="_blank"
+      rel="noopener noreferrer"
+      href="${ssLink(id)}"
+      title="SSYouTube par download karein"
+    >
+
+      ⬇️ SSYouTube
+
+    </a>
+
+  `;
+
+}
+
+
+/* ================= VIDMATE BUTTON ================= */
+
+function vmButton(id){
+
+  return `
+
+    <button
+      type="button"
+      class="dl-btn vm js-vidmate"
+      data-id="${esc(id)}"
+      title="VidMate par kholein"
+    >
+
+      📥 VidMate
+
+    </button>
+
+  `;
+
+}
+
+
+/* ================= SHARE BUTTON ================= */
+
+function shareButton(v){
+
+  return `
+
+    <button
+      type="button"
+
+      class="share-btn js-share"
+
+      data-id="${esc(v.id)}"
+
+      data-title="${esc(v.title)}"
+
+      title="Is video ka YouTube link share karein"
+    >
+
+      ↗️ Share this video
+
+    </button>
+
+  `;
+
+}
+
+
+/* ============================================================
+   CREATE VIDEO CARD
+============================================================ */
+
+function makeCard(
+  v,
+  kind
+){
+
+  const el =
+    document.createElement(
+      'article'
+    );
+
+  el.className =
+    'card';
+
+
+  const isShort =
+    kind === 'short';
+
+
+  const buttons =
+    isShort
+
+      ? ssButton(v.id) +
+        vmButton(v.id)
+
+      : vmButton(v.id) +
+        ssButton(v.id);
+
+
+  el.innerHTML = `
+
+    <div class="frame ${kind}">
+
+      <iframe
+
+        src="https://www.youtube.com/embed/${encodeURIComponent(v.id)}?rel=0&modestbranding=1"
+
+        title="${esc(v.title)}"
+
+        loading="lazy"
+
+        allow="
+          accelerometer;
+          autoplay;
+          clipboard-write;
+          encrypted-media;
+          gyroscope;
+          picture-in-picture;
+          web-share
+        "
+
+        referrerpolicy="
+          strict-origin-when-cross-origin
+        "
+
+        allowfullscreen>
+
+      </iframe>
+
+    </div>
+
+
+    <div class="meta">
+
+      <a
+        class="title"
+
+        target="_blank"
+
+        rel="noopener noreferrer"
+
+        href="${youtubeLink(v.id)}"
+      >
+
+        ${esc(v.title)}
+
+      </a>
+
+
+      <div class="sub">
+
+        <span>
+          ${esc(v.author || 'YouTube')}
+        </span>
+
+        <span>
+          ${fmtDur(v.dur)}
+        </span>
+
+      </div>
+
+
+      <div class="dl-row">
+
+        ${buttons}
+
+        ${shareButton(v)}
+
+      </div>
+
+    </div>
+
+  `;
+
+
+  /* ================= VIDMATE EVENT ================= */
+
+  const vm =
+    el.querySelector(
+      '.js-vidmate'
+    );
+
+
+  if(vm){
+
+    vm.addEventListener(
+      'click',
+      e => {
+
+        e.preventDefault();
+
+        openVidmate(
+          vm.dataset.id
+        );
+
+      }
+    );
+
+  }
+
+
+  /* ================= SHARE EVENT ================= */
+
+  const share =
+    el.querySelector(
+      '.js-share'
+    );
+
+
+  if(share){
+
+    share.addEventListener(
+      'click',
+      () => {
+
+        shareVideo(
+
+          share.dataset.id,
+
+          share.dataset.title,
+
+          share
+
+        );
+
+      }
+    );
+
+  }
+
+
+  return el;
+
+}
+
+
+/* ================= DIRECT YOUTUBE LINKS ================= */
+
+function linkRow(q){
+
+  const s =
+    encodeURIComponent(
+      q + ' shorts'
+    );
+
+  const v =
+    encodeURIComponent(q);
+
+
+  return `
+
+    <div class="row-links">
+
+      <a
+        target="_blank"
+        rel="noopener noreferrer"
+
+        href="
+          https://www.youtube.com/results?search_query=${s}&sp=EgIYAQ%253D%253D
+        "
+      >
+
+        🔴 YouTube par Shorts kholein
+
+      </a>
+
+
+      <a
+        target="_blank"
+        rel="noopener noreferrer"
+
+        href="
+          https://www.youtube.com/results?search_query=${v}
+        "
+      >
+
+        ▶️ YouTube par Videos kholein
+
+      </a>
+
+    </div>
+
+  `;
+
+}
+
+
+/* ============================================================
+   RENDER RESULTS
+============================================================ */
+
+function render(
+  q,
+  shorts,
+  videos
+){
+
+  outEl.innerHTML = '';
+
+
+  /* ================= SHORTS ================= */
+
+  const s1 =
+    document.createElement(
+      'section'
+    );
+
+
+  s1.innerHTML = `
+
+    <div class="section-head">
+
+      <h2>
+
+        <span class="tag">
+          SHORTS
+        </span>
+
+        Top Shorts
+
+      </h2>
+
+      <span class="count">
+        ${shorts.length} results
+      </span>
+
+    </div>
+
+
+    <div class="grid-shorts"></div>
+
+  `;
+
+
+  const gs =
+    s1.querySelector(
+      '.grid-shorts'
+    );
+
+
+  if(shorts.length){
+
+    shorts.forEach(v => {
+
+      gs.appendChild(
+        makeCard(
+          v,
+          'short'
+        )
+      );
+
+    });
+
+  }else{
+
+    gs.innerHTML = `
+
+      <div class="empty">
+
+        Koi Short nahi mila
+        (70 sec se kam).
+
+      </div>
+
+    `;
+
+  }
+
+
+  outEl.appendChild(s1);
+
+
+  /* ================= VIDEOS ================= */
+
+  const s2 =
+    document.createElement(
+      'section'
+    );
+
+
+  s2.innerHTML = `
+
+    <div class="section-head">
+
+      <h2>
+
+        <span class="tag alt">
+          VIDEOS
+        </span>
+
+        Generated Videos
+
+      </h2>
+
+      <span class="count">
+        ${videos.length} results
+      </span>
+
+    </div>
+
+
+    <div class="grid-videos"></div>
+
+  `;
+
+
+  const gv =
+    s2.querySelector(
+      '.grid-videos'
+    );
+
+
+  if(videos.length){
+
+    videos.forEach(v => {
+
+      gv.appendChild(
+        makeCard(
+          v,
+          'video'
+        )
+      );
+
+    });
+
+  }else{
+
+    gv.innerHTML = `
+
+      <div class="empty">
+
+        Koi long video nahi mila.
+
+      </div>
+
+    `;
+
+  }
+
+
+  outEl.appendChild(s2);
+
+
+  /* ================= DIRECT SEARCH ================= */
+
+  const links =
+    document.createElement(
+      'div'
+    );
+
+  links.innerHTML =
+    linkRow(q);
+
+  outEl.appendChild(
+    links
+  );
+
+}
+
+
+/* ================= FALLBACK ================= */
+
+function renderFallback(q){
+
+  outEl.innerHTML = `
+
+    <div class="empty">
+
+      <b>
+        Mirrors se results nahi mile.
+      </b>
+
+      <br>
+
+      Public Invidious / Piped
+      servers kabhi kabhi down
+      ya rate-limited ho jate hain.
+
+      <br>
+
+      Neeche se direct YouTube
+      search khol sakte hain 👇
+
+      ${linkRow(q)}
+
+    </div>
+
+  `;
+
+}
+
+
+/* ============================================================
+   MAIN SEARCH FLOW
+============================================================ */
+
+async function run(rawPrompt){
+
+  const prompt =
+    cleanPrompt(rawPrompt);
+
+
+  if(!prompt){
+    return;
+  }
+
+
+  btn.disabled =
+    true;
+
+
+  outEl.innerHTML =
+    '';
+
+
+  statusEl.innerHTML = `
+
+    <span class="spinner"></span>
+
+    "${esc(prompt)}"
+    ke liye videos dhoond raha hai…
+
+  `;
+
+
+  const [a,b] =
+    await Promise.all([
+
+      searchAll(prompt),
+
+      searchAll(
+        prompt + ' shorts'
+      )
+
+    ]);
+
+
+  /* ================= MERGE + DEDUPE ================= */
+
+  const seen =
+    new Set();
+
+  const merged =
+    [];
+
+
+  for(
+    const v of [...a,...b]
+  ){
+
+    if(!seen.has(v.id)){
+
+      seen.add(v.id);
+
+      merged.push(v);
+
+    }
+
+  }
+
+
+  /* ================= NO RESULTS ================= */
+
+  if(!merged.length){
+
+    statusEl.textContent =
+      '⚠️ Koi result nahi mila.';
+
+    renderFallback(
+      prompt
+    );
+
+    btn.disabled =
+      false;
+
+    return;
+
+  }
+
+
+  /* ================= CLASSIFY ================= */
+
+  const shortsPool =
+    merged.filter(
+      v =>
+        v.dur > 0 &&
+        v.dur <= 70
+    );
+
+
+  const videoPool =
+    merged.filter(
+      v =>
+        v.dur > 70
+    );
+
+
+  const shorts =
+    shortsPool.slice(0,5);
+
+
+  const videos =
+    videoPool.slice(0,2);
+
+
+  /* ================= FILL GAPS ================= */
+
+  const usedIds =
+    new Set([
+
+      ...shorts,
+      ...videos
+
+    ].map(v => v.id));
+
+
+  const leftover =
+    merged.filter(
+      v =>
+        !usedIds.has(v.id)
+    );
+
+
+  for(
+    const v of leftover
+  ){
+
+    if(shorts.length >= 5){
+      break;
+    }
+
+    if(!usedIds.has(v.id)){
+
+      shorts.push(v);
+
+      usedIds.add(v.id);
+
+    }
+
+  }
+
+
+  for(
+    const v of leftover
+  ){
+
+    if(videos.length >= 2){
+      break;
+    }
+
+    if(!usedIds.has(v.id)){
+
+      videos.push(v);
+
+      usedIds.add(v.id);
+
+    }
+
+  }
+
+
+  /* ================= DONE ================= */
+
+  statusEl.innerHTML = `
+
+    ✅ <b>${shorts.length}</b>
+    Shorts +
+
+    <b>${videos.length}</b>
+    Videos mil gaye.
+
+  `;
+
+
+  render(
+    prompt,
+    shorts,
+    videos
+  );
+
+
+  btn.disabled =
+    false;
+
+}
+
+
+/* ================= FORM ================= */
+
+$('#form').addEventListener(
+  'submit',
+  e => {
+
+    e.preventDefault();
+
+    run(input.value);
+
+  }
+);
+
+
+/* ================= CHIPS ================= */
+
+$('#chips').addEventListener(
+  'click',
+  e => {
+
+    if(
+      e.target.classList.contains(
+        'chip'
+      )
+    ){
+
+      input.value =
+        e.target.textContent.trim();
+
+      run(input.value);
+
+    }
+
+  }
+);
+
+</script>
+
+</body>
+</html>
